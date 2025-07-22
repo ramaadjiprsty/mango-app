@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Klasifikasi Penyakit Daun Mangga</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen flex flex-col">
+
+  <header class="bg-green-600 text-white shadow-md">
+    <div class="container mx-auto px-6 py-4">
+      <h1 class="text-3xl font-bold">🍃 Klasifikasi Penyakit Daun Mangga</h1>
+      <p class="mt-1 text-green-100">Alat bantu cerdas untuk menjaga kesehatan tanaman mangga Anda.</p>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-6 py-12 flex-grow">
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+      <div class="p-8">
+        <form id="upload-form">
+          <div id="image-stage" class="relative w-full h-72 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center transition-all duration-300">
+            <label for="file-upload" id="dropzone" class="w-full h-full cursor-pointer flex flex-col items-center justify-center text-center p-4">
+              <svg class="w-12 h-12 mb-4 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/></svg>
+              <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Klik untuk unggah</span> atau seret gambar</p>
+              <p class="text-xs text-gray-400">Rasio terbaik adalah gambar potret (tegak)</p>
+            </label>
+            <img id="preview-image" class="absolute w-full h-full object-contain hidden" alt="Pratinjau Gambar" />
+            <div id="loading-overlay" class="absolute inset-0 bg-white bg-opacity-75 flex flex-col items-center justify-center hidden">
+              <svg aria-hidden="true" class="w-12 h-12 text-gray-300 animate-spin fill-green-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0492C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/></svg>
+            </div>
+            <input type="file" id="file-upload" class="hidden" accept="image/png, image/jpeg, image/jpg" />
+          </div>
+
+          <div id="result-section" class="text-center mt-6 hidden">
+             <h3 id="result-label" class="text-2xl font-bold text-green-700"></h3>
+             <p id="result-confidence" class="text-lg font-medium text-gray-600"></p>
+             <div id="disease-info" class="mt-4 text-left p-4 bg-green-50 rounded-lg border border-green-200">
+                <p id="disease-description" class="text-gray-700"></p>
+                <ul id="disease-symptoms" class="list-disc list-inside mt-2 text-sm text-gray-600"></ul>
+             </div>
+          </div>
+
+          <div id="actions-section" class="mt-6 text-center">
+            <button type="submit" id="submit-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition shadow-lg hidden">Prediksi Penyakit</button>
+            <button type="button" id="reset-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg transition hidden">Analisis Gambar Lain</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <section class="max-w-2xl mx-auto mt-8">
+        <div class="space-y-3">
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <button class="accordion-toggle flex justify-between items-center w-full p-4 font-semibold text-left">
+              <span>Bagaimana Cara Kerjanya?</span>
+              <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="accordion-content">
+              <div class="p-4 pt-0 text-gray-600">Aplikasi ini menggunakan model Deep Learning yang telah dilatih dengan ribuan gambar untuk mengenali pola visual unik dari setiap penyakit daun mangga.</div>
+            </div>
+          </div>
+          <div class="bg-white border border-gray-200 rounded-lg">
+            <button class="accordion-toggle flex justify-between items-center w-full p-4 font-semibold text-left">
+              <span>Tips untuk Foto Terbaik</span>
+              <svg class="w-5 h-5 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div class="accordion-content">
+              <div class="p-4 pt-0">
+                <ul class="list-disc list-inside text-gray-600 space-y-1">
+                  <li>Gunakan pencahayaan yang terang dan merata.</li>
+                  <li>Posisikan daun di atas latar belakang yang kontras.</li>
+                  <li>Pastikan fokus kamera tajam pada bagian daun yang terinfeksi.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+  </main>
+
+  <footer class="bg-gray-100 border-t">
+    <div class="container mx-auto text-center text-gray-600 text-sm py-4 mt-8">&copy; 2025 MangoLeafAI</div>
+  </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const diseaseDatabase = {
+        'Anthracnose': { description: 'Disebabkan oleh jamur Colletotrichum. Salah satu penyakit paling merusak pada mangga.', symptoms: ['Bintik hitam cekung pada daun.', 'Pada infeksi parah, daun mengering dan rontok.'] },
+        'Bacterial Canker': { description: 'Disebabkan oleh bakteri Xanthomonas. Bakteri masuk melalui luka pada tanaman.', symptoms: ['Lesi kecil hitam menonjol, dikelilingi lingkaran kuning.', 'Dapat bergabung menjadi bercak besar.'] },
+        'Powdery Mildew': { description: 'Disebabkan oleh jamur Oidium. Berkembang saat cuaca lembab.', symptoms: ['Lapisan putih seperti tepung pada daun.', 'Daun yang terinfeksi bisa mengerut.'] },
+        'Healthy': { description: 'Selamat! Daun mangga Anda terlihat sehat dan tidak menunjukkan tanda-tanda penyakit umum.', symptoms: ['Tidak ada bintik atau perubahan warna.', 'Tetap lakukan pemantauan rutin.'] },
+        'Sooty Mould': { description: 'Disebabkan oleh jamur yang tumbuh pada embun madu dari serangga (kutu).', symptoms: ['Lapisan hitam seperti jelaga menutupi daun.', 'Menghalangi sinar matahari dan fotosintesis.'] }
+    };
+
+    const form = document.getElementById('upload-form');
+    const fileInput = document.getElementById('file-upload');
+    const imageStage = document.getElementById('image-stage');
+    const dropzone = document.getElementById('dropzone');
+    const previewImage = document.getElementById('preview-image');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const resultSection = document.getElementById('result-section');
+    const resultLabel = document.getElementById('result-label');
+    const resultConfidence = document.getElementById('result-confidence');
+    const diseaseDescription = document.getElementById('disease-description');
+    const diseaseSymptoms = document.getElementById('disease-symptoms');
+    const submitBtn = document.getElementById('submit-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
+    function updateUIState(state) {
+        dropzone.classList.add('hidden');
+        previewImage.classList.add('hidden');
+        loadingOverlay.classList.add('hidden');
+        resultSection.classList.add('hidden');
+        submitBtn.classList.add('hidden');
+        resetBtn.classList.add('hidden');
+
+        imageStage.classList.remove('border-dashed', 'bg-gray-50');
+        imageStage.style.borderStyle = 'solid';
+        imageStage.style.borderColor = 'transparent';
+        submitBtn.textContent = 'Prediksi Penyakit';
+
+        switch(state) {
+            case 'initial':
+                imageStage.classList.add('border-dashed', 'bg-gray-50');
+                imageStage.style.borderColor = '';
+                dropzone.classList.remove('hidden');
+                form.reset();
+                break;
+            case 'preview':
+                previewImage.classList.remove('hidden');
+                submitBtn.classList.remove('hidden');
+                break;
+            case 'loading':
+                previewImage.classList.remove('hidden');
+                loadingOverlay.classList.remove('hidden');
+                submitBtn.classList.remove('hidden');
+                submitBtn.textContent = 'Memprediksi...';
+                break;
+            case 'result':
+                previewImage.classList.remove('hidden');
+                resultSection.classList.remove('hidden');
+                resetBtn.classList.remove('hidden');
+                break;
+        }
+    }
+
+    function displayPreview(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImage.src = e.target.result;
+            updateUIState('preview');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function displayResult(data) {
+        const label = data.label.replace(/_/g, ' ');
+        resultLabel.textContent = label;
+        resultConfidence.textContent = `Tingkat Keyakinan: ${(data.confidence * 100).toFixed(2)}%`;
+        const info = diseaseDatabase[label] || { description: 'Tidak ada informasi detail untuk hasil ini.', symptoms: [] };
+        diseaseDescription.textContent = info.description;
+        diseaseSymptoms.innerHTML = '';
+        info.symptoms.forEach(symptom => {
+            const li = document.createElement('li');
+            li.textContent = symptom;
+            diseaseSymptoms.appendChild(li);
+        });
+    }
+
+    fileInput.addEventListener('change', (e) => displayPreview(e.target.files[0]));
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => imageStage.addEventListener(eName, e => { e.preventDefault(); e.stopPropagation(); }));
+    ['dragenter', 'dragover'].forEach(eName => imageStage.addEventListener(eName, () => { if (dropzone.classList.contains('hidden')) return; imageStage.style.borderColor = '#22c55e' }));
+    ['dragleave', 'drop'].forEach(eName => imageStage.addEventListener(eName, () => imageStage.style.borderColor = 'transparent'));
+    
+    imageStage.addEventListener('drop', (e) => {
+        fileInput.files = e.dataTransfer.files;
+        displayPreview(e.dataTransfer.files[0]);
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        updateUIState('loading');
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/predict', { method: 'POST', body: formData });
+            if (!response.ok) throw new Error(`Server: ${response.statusText}`);
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            displayResult(data);
+        } catch (err) {
+            displayResult({ label: 'Prediksi Gagal', confidence: 0, description: err.message, symptoms: [] });
+        } finally {
+            updateUIState('result');
+        }
+    });
+
+    resetBtn.addEventListener('click', () => updateUIState('initial'));
+
+    document.querySelectorAll('.accordion-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('svg');
+            if (content.style.maxHeight) {
+                content.style.maxHeight = null;
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.style.transform = 'rotate(180deg)';
+            }
+        });
+    });
+
+    updateUIState('initial');
+});
+</script>
+</body>
+</html>
